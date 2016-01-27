@@ -8,6 +8,9 @@ var request = require('request');
  * @param {string} config.secret - application secret
  * @param {string} config.scope - comma separated list of permissions to request
  * @param {string} config.bearer - Uphold API token
+ * @param {string} config.pat - Uphold API Personal Access Token
+ * @param {string} config.username - Uphold API basic auth username or email address
+ * @param {string} config.password - Uphold API basic auth password
  */
 module.exports = function(config) {
 
@@ -40,8 +43,13 @@ module.exports = function(config) {
         options.method = options.method || 'GET';
         options.headers = options.headers || {};
         options.headers['content-type'] = 'application/x-www-form-urlencoded';
-        if(config.bearer && !options.headers.Authorization) options.headers.Authorization = 'Bearer ' + config.bearer;
-
+        if(!options.headers.Authorization) {
+                if(config.bearer) { options.headers.Authorization = 'Bearer ' + config.bearer; }
+                else if(config.pat) { options.auth = { username: config.pat, password: 'X-OAuth-Basic' }; }
+                else if(config.username && config.password) {
+                    options.auth = { username: config.username, password: config.password };
+                }
+        }
         request(options, function(err, res, body) {
             return responseHandler(err, res, body, callback);
         });
